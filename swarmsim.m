@@ -192,4 +192,31 @@ if ~(strcmp('',movie))
     %mov = close(mov);
 end
 close(mov);
+
+
+%%%%%%% Create the position and velocity arrays %%%%%%%
+position = cat(3,x,y);
+velocity = cat(3,v,u);
+
+%%%%%%% Plot the boundary of the ellipse %%%%%%
+
+x_snapshot = squeeze(x(:,2000));
+y_snapshot = squeeze(y(:,2000));
+
+%fig = figure(3);
+%plot(x_snapshot, y_snapshot, '.');
+%k = boundary(x_snapshot,y_snapshot);
+%hold on;
+%plot(x_snapshot(k),y_snapshot(k));
+
+
+%%%%%% Fit a minimum volume ellipse to the data %%%%%
+position_snapshot = squeeze(position(:,2000,:))';
+[A, c] = MinVolEllipse(position_snapshot, 0.01);
+
+plot(x_snapshot, y_snapshot, '*');
+hold on;
+Ellipse_plot(A,c);
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
