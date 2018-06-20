@@ -9,13 +9,14 @@ L = 50;                 %attractive length in particle diameters
 G = 5;                  %attractive strength
 lambda = 0.1;           %damping coefficient
 rep = -1;               %repulsion from shepherd (set -1 for no shepherd)
-time = 5;              %total time
+time = 50;              %total time
 dt = 0.001;             %time step
 method = 'Verlet';      %integration method
 borders = [00 30 00 30];%set [x0 x1 y0 y1] to turn borders on (particles bounce), 0 is off
 output = '';            %name of the output file. Set '' for no output
 movie = 'output.mp4';   %movie output name. Set '' for no movie output
 fps = 10;               %FPS for movie
+ApplyBC = true;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -27,6 +28,8 @@ T = zeros(N,timesteps); %allocate kinetic energy array
 f_x = zeros(1,N);       %allocate force matrix x-direction
 f_y = zeros(1,N);       %allocate force matrix y-direction
 V_j = zeros(1,N);       %allocate potential matrix
+
+% create a position array for the sentinel
 
 %%% Calcualtion part %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for t=1:time/dt+1
@@ -85,7 +88,7 @@ for t=1:time/dt+1
         end
         
         %%% If borders are on %%%%%%%%%%%%%%%%%%%%%%%%%%%%%        
-        if borders ~= 0
+        if ApplyBC
             if (x(i,t+1) < borders(1)+sigma/2) || (x(i,t+1) > borders(2)-sigma/2) %x
                 x(i,t+1) = 2*x(i,t) - x(i,t+1);
                 if (strcmp('Euler',method))
@@ -134,7 +137,7 @@ end
 
 
 %%% Set the axis %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if borders ~= 0 %if borders are given set the axis equal to the borders
+if ApplyBC %if borders are given set the axis equal to the borders
     ax_x = borders(1:2);
     ax_y = borders(3:4);
 else %if not set the axis automatically to the highest traveled distance of the particles
@@ -169,11 +172,25 @@ if ~(strcmp('',movie))
             %red = high v, blue = high u, or combo
 
             fill(xx,yy,color);
-        end        
+        end   
         
-        %add the text with the energy
-       %text(ax_x(1),ax_y(2),['   V = ', num2str(V_sum(k)), '      T = ' ,num2str(T_sum(k))]);
-       %text((ax_x(1)+ax_x(2))/2,ax_y(2),['Total = ',num2str(T_sum(k)+V_sum(k))]);
+        % get snapshots
+        x_snapshot = x(:,k);
+        y_snapshot = y(:,k);
+        
+        % get the convex hull points
+        K = convhull(x_snapshot, y_snapshot);
+        
+        % plot the convex hull
+        plot(x_snapshot(K), y_snapshot(K),'b','linewidth',3);
+        %hold on;
+        
+        % fit ellipse
+        if k ~= 1
+            position_snapshot = squeeze(cat(3,x_snapshot(K), y_snapshot(K)))';
+            [z, a, b, alpha] = fitellipse(position_snapshot);
+            plotellipse(z, a, b, alpha)
+        end
 
         set(gca,'DataAspectRatio',[1 1 1]); %set aspect ratio x:y to 1:1
         axis([ax_x ax_y]); %set the axis
@@ -211,12 +228,15 @@ y_snapshot = squeeze(y(:,2000));
 
 
 %%%%%% Fit a minimum volume ellipse to the data %%%%%
-position_snapshot = squeeze(position(:,2000,:))';
-[A, c] = MinVolEllipse(position_snapshot, 0.01);
+% position_snapshot = squeeze(position(:,2000,:))';
+% [A, c] = MinVolEllipse(position_snapshot, 0.01);
+% 
+% plot(x_snapshot, y_snapshot, '*');
+% hold on;
+% Ellipse_plot(A,c);
 
-plot(x_snapshot, y_snapshot, '*');
-hold on;
-Ellipse_plot(A,c);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

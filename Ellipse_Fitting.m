@@ -3,7 +3,7 @@
 % check a single snapshot 
 tmidx = 50;
 %x_curr = x(:,tmidx); y_curr = y(:,tmidx);
-x_curr = x(:,2); y_curr = y(:,2);
+x_curr = x(:,end); y_curr = y(:,end);
 pos_curr = [x_curr';y_curr'];
 % Fit ellipse to data 
 [z, a, b, alpha] = fitellipse(pos_curr);
