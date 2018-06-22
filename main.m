@@ -2,29 +2,37 @@
 %The script can read both 1D and 2D files
 
 close all
-clear all
 clc
 
 %%% DATA TO CHANGE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% set a path to save all of the results from the simulation
+outpath = '/Users/liam/output';
+if ~exist(outpath, 'dir')
+  mkdir(outpath);
+end
+
+% set the output name of the movie
+movieName = 'movie.mp4';    
+moviePath = fullfile(outpath, movieName);
+
 rng(4);
-sigma = 1;              %particle diameter
-epsilon = 15;           %material parameter
-L = 30;                 %attractive length in particle diameters
-l = 10;                 %repulsive length from the predator
-G = 0.5;                  %attractive strength
-lambda = 1;           %damping coefficient
+sigma = 1;               %particle diameter
+epsilon = 15;            %material parameter
+L = 30;                  %attractive length in particle diameters
+l = 10;                  %repulsive length from the predator
+G = 0.5;                 %attractive strength
+lambda = 1;              %damping coefficient
 c = 0.27;                % predator-prey repulsion
 %rep = -1;               %repulsion from shepherd (set -1 for no shepherd)
-time = 10;              %total time
-dt = 0.001;             %time step
-method = 'Kinematic';      %integration method
-borders = [00 30 00 30];%set [x0 x1 y0 y1] to turn borders on (particles bounce), 0 is off
-output = '';            %name of the output file. Set '' for no output
-movie = 'Ellip_circl_pred_fitE.mp4';   %movie output name. Set '' for no movie output
-fps = 10;               %FPS for movie
+time = 0.5;               %total time
+dt = 0.001;              %time step
+method = 'Kinematic';    %integration method
+borders = [00 30 00 30]; %set [x0 x1 y0 y1] to turn borders on (particles bounce), 0 is off
+fps = 10;                %FPS for movie
 ApplyBC = false;
 
-N = 20; % num of particles 
+N = 10; % num of particles 
 m = 0.1*ones(N,1); % mass of the particles
 
 timesteps = time/dt+1; %number of timesteps to be calculated
@@ -88,7 +96,8 @@ Area_conv = zeros([timesteps 1]);
 
 
 
-%%% Calcualtion part %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%% Calcualtion part %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 for t=1:time/dt+1
     for i=1:N
         for j=1:N %set force/energy interactions for each particle
@@ -184,12 +193,12 @@ for t=1:time/dt+1
         V(i,t) = sum(V_j); %Potential energy: sum of influence of other particles
         T(i,t) = 1/2*m(i)*(v(i,t)^2+u(i,t)^2); %Kinetic energy: 1/2mv^2
     end
-    Z(:,t) = (1/N)*[sum(x(:,t)) sum(y(:,t))]'; % COM (\bar{x} \bar{y})
-    X_bar = Z(1,:)';
-    Y_bar = Z(2,:)';
 end
 
-% Calculate and plot lumped quantities %%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%% Calculate and plot lumped quantities (energy calculated above) %%%%%%%%%%%%%%%%%%%%%%%%
 
 for t = 1:timesteps 
     pos_curr = [x(:,t) y(:,t)]';
@@ -202,6 +211,10 @@ for t = 1:timesteps
     orient = mod(alpha*180/pi,360);
     eccen = b/a;
     [k1,v1] = convhull(x(:,t),y(:,t));
+    
+    Z(:,t) = (1/N)*[sum(x(:,t)) sum(y(:,t))]'; % COM (\bar{x} \bar{y})
+    X_bar = Z(1,:)';
+    Y_bar = Z(2,:)';
     
     A(t) = a;
     B(t) = b;
@@ -217,33 +230,49 @@ for t = 1:timesteps
 end 
 
 
-figure(1)
+
+%%%%%%%%%%%%%%%%%%% Plot and save the figures %%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% orientation
+fig1 = figure(1);
 plot(0:dt:time,Orient,'r','linewidth',3)
 xlabel('Time','FontSize',14,'FontSize',14)
 ylabel('Orientation','FontSize',14)
 title('Orientation of the fit ellipse over time','FontSize',14)
-figure(2)
+fig1_name = 'Orientation.png';
+saveas(fig1, fullfile(outpath, fig1_name))
+
+% eccentricity
+fig2 = figure(2);
 plot(0:dt:time,Eccen,'k','linewidth',3)
 xlabel('Time','FontSize',14)
 ylabel('Eccentricity','FontSize',14)
 title('Eccentricity of the ellipse varying over time','FontSize',14)
-figure(3)
+fig2_name = 'eccentricity.png';
+saveas(fig2, fullfile(outpath, fig2_name))
+
+% area
+fig3 = figure(3);
 plot(0:dt:time,Area_ell,'b','linewidth',3)
 xlabel('Time','FontSize',14)
 ylabel('Area','FontSize',14)
 title('Area using Ellipse fit over time','FontSize',14)
-figure(4)
+fig3_name = 'Area.png';
+saveas(fig3, fullfile(outpath, fig3_name))
+
+% center of mass
+fig4 = figure(4);
 plot(X_bar,Y_bar,'k','linewidth',3)
 title('Central of mass varying over time','FontSize',14)
 xlabel('X','FontSize',14)
 ylabel('Y','FontSize',14)
+fig4_name = 'Center of Mass.png';
+saveas(fig4, fullfile(outpath, fig4_name))
 
-
-% Calculate and plot energy %%%%%%%%%%%%%%%%%%%%%%%%
+% energy
 V_sum = sum(V)/2; %sum the potential energy of all particles times a half since matrix is mirrored
 T_sum = sum(T) ;%1/2.*m'.*(sum(u.^2)+sum(v.^2)); %sum from all particles: 0.5*m*v^2
-
-fig=figure(5);
+fig5=figure(5);
 hold on
 plot(0:dt:time,(T_sum+V_sum)/N^2)
 plot(0:dt:time,T_sum/N^2,'r')
@@ -251,16 +280,21 @@ plot(0:dt:time,V_sum/N^2,'k')
 title('The total energy of the system','FontSize',14);
 xlabel('Time','FontSize',12);
 ylabel('Energy','FontSize',12);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+fig5_name = 'Energy.png';
+saveas(fig5, fullfile(outpath, fig5_name))
 
-%%% Create file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if ~strcmp('', output) %check if output file is provided
-    createfile(x, y, v, u, output);
-end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-%%% Set the axis %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%% Draw the movie %%%%%%%%%%%%%%%%%%%%%
+
+% set the axes 
 if ApplyBC %if borders are given set the axis equal to the borders
     ax_x = borders(1:2);
     ax_y = borders(3:4);
@@ -272,13 +306,11 @@ else %if not set the axis automatically to the highest traveled distance of the 
         ax_y = [min(min(y))-0.5*sigma max(max(y))+0.5*sigma]; %y axis for 2D
     end
 end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-%%% Draw the circles and make the movie%%%%%%%%%%%%%%%
-if ~(strcmp('',movie))
+% Draw the circles and make the movie
+if ~(strcmp('', moviePath))
     fig=figure(6);
-    mov = VideoWriter(movie, 'MPEG-4');
+    mov = VideoWriter(moviePath, 'MPEG-4');
 
     for k=1:1/dt/fps:timesteps %pick the points for the correct number of fps
         circle = linspace(0,2*pi,100); %create a circle
@@ -321,8 +353,6 @@ if ~(strcmp('',movie))
         THETHA_z = atan2(u_z(round(k)),v_z(round(k)));
         xx_z = sigma/2*cos(circle)*cos(THETHA_z) - sigma/4*sin(circle)*sin(THETHA_z) + x_z(round(k)); %x-location of particle                  
         yy_z = sigma/2*cos(circle)*sin(THETHA_z) + sigma/4*sin(circle)*cos(THETHA_z) + y_z(round(k)); %y-location of particle
-%         xx_z = sigma/2*cos(circle)+x_z(round(k)); %x-location of particle                  
-%         yy_z = sigma/2*sin(circle)+y_z(round(k)); %y-location of particle
         p3 = fill(xx_z,yy_z,'c');
         hold on
         
@@ -343,13 +373,17 @@ if ~(strcmp('',movie))
         %clear the figure for removing traces
         clf(fig);
     end
-
     %close the movie when done
-    %mov = close(mov);
+    close(mov)
 end
-close(mov);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
+
+
+%%%%%%%%%%%%%%%%%% Save the workspace %%%%%%%%%%%%%%%%%%%%%%%%%%%
+workspacePath = fullfile(outpath, 'Variables');
+save(workspacePath, 'sigma', 'epsilon', 'L', 'l', 'G', 'lambda', 'c', 'time', 'dt', 'method', 'borders', 'ApplyBC', 'fps', ...
+                    'N', 'm', 'timesteps', 'V', 'T', 'x', 'y', 'u', 'v', 'f_x', 'f_y', 'V_j', 'A', 'B', 'save_Z', 'save_X_bar', ...
+                    'save_Y_bar', 'Alpha', 'Orient', 'Eccen', 'Z', 'X_bar', 'Y_bar', 'Area_ell', 'Area_conv');
 
 
