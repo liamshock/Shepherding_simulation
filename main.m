@@ -17,22 +17,22 @@ movieName = 'movie.mp4';
 moviePath = fullfile(outpath, movieName);
 
 rng(4);
-sigma = 1;               %particle diameter
-epsilon = 15;            %material parameter
-L = 30;                  %attractive length in particle diameters
-l = 10;                  %repulsive length from the predator
-G = 0.5;                 %attractive strength
-lambda = 1;              %damping coefficient
-c = 0.27;                % predator-prey repulsion
-%rep = -1;               %repulsion from shepherd (set -1 for no shepherd)
-time = 0.5;               %total time
-dt = 0.001;              %time step
-method = 'Kinematic';    %integration method
-borders = [00 30 00 30]; %set [x0 x1 y0 y1] to turn borders on (particles bounce), 0 is off
-fps = 10;                %FPS for movie
+sigma = 1;                 % particle diameter
+epsilon = 15;              % material parameter
+L = 20;                    % attractive length in particle diameters
+l = 5;                     % repulsive length from the predator
+G = 0.1;                   % attractive strength
+lambda = 1;                % damping coefficient
+c = 0.4;                   % predator-prey repulsion
+%rep = -1;                 % repulsion from shepherd (set -1 for no shepherd)
+time = 0.5;                 % total time
+dt = 0.001;                % time step
+method = 'Kinematic';      % integration method
+borders = [-30 30 -30 30]; % set [x0 x1 y0 y1] to turn borders on (particles bounce), 0 is off
+fps = 10;                  % FPS for movie
 ApplyBC = false;
 
-N = 10; % num of particles 
+N = 20; % num of particles 
 m = 0.1*ones(N,1); % mass of the particles
 
 timesteps = time/dt+1; %number of timesteps to be calculated
@@ -40,20 +40,14 @@ timesteps = time/dt+1; %number of timesteps to be calculated
 % initialize variables 
 x = zeros(N,timesteps); y = x;  u = x; v = x;
 
-%%%%%%%%%%%%%
+% Init Position and velocity of a single Predator
 thet0_z = linspace(0,4*pi,timesteps); %2*pi*rand(1);
-%spd0_z = 2;             % Speed of the Predator
-% u0_z = cos(thet0_z);
-% v0_z = sin(thet0_z);
-
-% x_z = zeros(1,timesteps)+15; y_z = x_z;    % Init Position of a single Predator
 x_z = 5.*cos(thet0_z)+15; y_z = 5.*sin(thet0_z)+15;
-% x_z = 15 ; y_z=15;
 v_z = -5.*sin(thet0_z); u_z = 5.*cos(thet0_z);
 
 % Initial conditions and velocities 
-x0 = borders(1) + borders(2)*rand(N,1); % x - initial positions of agents form uniform random distr 
-y0 = borders(3) + borders(4)*rand(N,1); % y - initial positions of agents form uniform random distr 
+x0 = borders(1) + (borders(2)-borders(1))*rand(N,1); % x - initial positions of agents form uniform random distr 
+y0 = borders(3) + (borders(4)-borders(3))*rand(N,1); % y - initial positions of agents form uniform random distr 
 
 % initial velocities 
 thet0 = 2*pi*rand(N,1); 
@@ -62,17 +56,13 @@ u0 = spd0.*cos(thet0);
 v0 = spd0.*sin(thet0);
 variables = 5;
 
-% figure 
-% plot(x0,y0,'.k')
-
 % place the Ic in their corresponding matrices 
 x(:,1) = x0;
 y(:,1) = y0;
 u(:,1) = u0;
 v(:,1) = v0;
-% x_z(1) = x0_z;
-% y_z(1) = y0_z;
 
+% initialize more variables
 V = zeros(N,timesteps); %allocate potential energy array
 T = zeros(N,timesteps); %allocate kinetic energy array
 f_x = zeros(1,N);       %allocate force matrix x-direction
@@ -109,24 +99,19 @@ for t=1:time/dt+1
                 
                 %compute unit normal vector, n(1)=n_x, n(2)=n_y
                 n = [ x(j,t)-x(i,t) y(j,t)-y(i,t) ]/norm([ x(j,t)-x(i,t) y(j,t)-y(i,t) ]);
+                n_z = [ x_z(t)-x(i,t) y_z(t)-y(i,t) ]/norm([ x_z(t)-x(i,t) y_z(t)-y(i,t) ]);
                 
                 %compute effective attractive strength
                 %Geff = G*(1+(j==1)*(-rep-1));
                 
                 %for x direction
-               %f_x(j) = n(1)*-4*epsilon*((6*R*(L*sigma)^6)/rij^7 - (12*(L*sigma)^12)/rij^13);
-                f_x(j) = n(1)*-4*epsilon*(exp(-rij/sigma)/sigma - G*exp(-rij/(L*sigma))/(L*sigma)+c*exp(-riz/(l*sigma))/(l*sigma));
-                %f_x(j) = n(1)*-4*epsilon*(1/rij) - Geff*(rij);
+                f_x(j) = -4*epsilon*(n(1)*exp(-rij/sigma)/sigma - n(1)*G*exp(-rij/(L*sigma))/(L*sigma) + n_z(1)*c*exp(-riz/(l*sigma))/(l*sigma));
                 
                 %for y direction
-               %f_y(j) = n(2)*-4*epsilon*((6*(L*sigma)^6)/rij^7 - (12*(L*sigma)^12)/rij^13);
-                f_y(j) = n(2)*-4*epsilon*(exp(-rij/sigma)/sigma - G*exp(-rij/(L*sigma))/(L*sigma)+c*exp(-riz/(l*sigma))/(l*sigma));
-                %f_y(j) = n(2)*-4*epsilon*(1/rij) - Geff*(rij);
+                f_y(j) = -4*epsilon*(n(2)*exp(-rij/sigma)/sigma - n(2)*G*exp(-rij/(L*sigma))/(L*sigma) + n_z(2)*c*exp(-riz/(l*sigma))/(l*sigma));
                 
                 %potential energy
-               %V_j(j) = 4*epsilon*((sigma/rij)^12-(L*sigma/rij)^6);
-                V_j(j) = 4*epsilon*(G*exp(-rij/(L*sigma)) - c*exp(-riz/(l*sigma)) - exp(-rij/sigma));
-                %V_j(j) = 4*epsilon*(log(abs(rij)) - Geff*(1/2)*((rij)^2));
+                V_j(j) = 4*epsilon*(-sigma*exp(-rij/sigma) + G*exp(-rij/(L*sigma)) - c*exp(-riz/(l*sigma)));
             
             else %if i=j: force=0, potential=0
                 f_x(j) = 0;
@@ -167,7 +152,7 @@ for t=1:time/dt+1
             disp('No valid integration method given!');
         end
         
-        %%% If borders are on %%%%%%%%%%%%%%%%%%%%%%%%%%%%%        
+        %%% If borders are on %%%%%%%%%%%%%%%       
         if ApplyBC
             if (x(i,t+1) < borders(1)+sigma/2) || (x(i,t+1) > borders(2)-sigma/2) %x
                 x(i,t+1) = 2*x(i,t) - x(i,t+1);
@@ -186,7 +171,7 @@ for t=1:time/dt+1
                 end   
             end
         end
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         
         %Energy calculations
@@ -202,15 +187,15 @@ end
 
 for t = 1:timesteps 
     pos_curr = [x(:,t) y(:,t)]';
-    % Fit ellipse to data 
-    [z, a, b, alpha] = fitellipse(pos_curr);
-    Q = [cos(alpha), -sin(alpha); 
-         sin(alpha), cos(alpha)];
-    theta = linspace(0,2*pi,360);
-    PosEllip = z + Q*[a * cos(theta); b * sin(theta)];
-    orient = mod(alpha*180/pi,360);
-    eccen = b/a;
-    [k1,v1] = convhull(x(:,t),y(:,t));
+%     % Fit ellipse to data 
+%     [z, a, b, alpha] = fitellipse(pos_curr);
+%     Q = [cos(alpha), -sin(alpha); 
+%          sin(alpha), cos(alpha)];
+%     theta = linspace(0,2*pi,360);
+%     PosEllip = z + Q*[a * cos(theta); b * sin(theta)];
+%     orient = mod(alpha*180/pi,360);
+%     eccen = b/a;
+%     [k1,v1] = convhull(x(:,t),y(:,t));
     
     Z(:,t) = (1/N)*[sum(x(:,t)) sum(y(:,t))]'; % COM (\bar{x} \bar{y})
     X_bar = Z(1,:)';
@@ -221,11 +206,11 @@ for t = 1:timesteps
     save_Z(t,:) = z;
     save_X_bar(t) = z(1);
     save_Y_bar(t) = z(2);
-    Alpha(t) = alpha;
-    Orient(t) = orient;
-    Eccen(t) = eccen;
-    Area_ell(t) = pi*a*b;
-    Area_conv(t) = v1;
+%     Alpha(t) = alpha;
+%     Orient(t) = orient;
+%     Eccen(t) = eccen;
+%     Area_ell(t) = pi*a*b;
+%     Area_conv(t) = v1;
     
 end 
 
@@ -315,14 +300,9 @@ if ~(strcmp('', moviePath))
     for k=1:1/dt/fps:timesteps %pick the points for the correct number of fps
         circle = linspace(0,2*pi,100); %create a circle
         hold on;
-        for n=1:N %plot N circles...
-%             xx = sigma/2*cos(circle)+x(n,round(k)); %x-location of particle                  
-%             yy = sigma/2*sin(circle)+y(n,round(k)); %y-location of particle
+        %plot N circles
+        for n=1:N
             THETHA = atan2(u(n,round(k)),v(n,round(k)));
-            %THETHA = 1
-%             dott = dot(u(n,round(k)),v(n,round(k)));
-%             crosss = norm(cross(u(n,round(k)),v(n,round(k))));
-%             THETHA = atan(crosss/dott);
             xx = sigma/2*cos(circle)*cos(THETHA) - sigma/4*sin(circle)*sin(THETHA) + x(n,round(k)); %x-location of particle                  
             yy = sigma/2*cos(circle)*sin(THETHA) + sigma/4*sin(circle)*cos(THETHA) + y(n,round(k)); %y-location of particle
 
