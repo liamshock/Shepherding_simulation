@@ -15,7 +15,7 @@ G = 0.5;                  %attractive strength
 lambda = 1;           %damping coefficient
 c = 0.27;                % predator-prey repulsion
 %rep = -1;               %repulsion from shepherd (set -1 for no shepherd)
-time = 10;              %total time
+time = 50;              %total time
 dt = 0.001;             %time step
 method = 'Kinematic';      %integration method
 borders = [00 30 00 30];%set [x0 x1 y0 y1] to turn borders on (particles bounce), 0 is off
@@ -24,7 +24,7 @@ movie = 'Ellip_circl_pred_fitE.mp4';   %movie output name. Set '' for no movie o
 fps = 10;               %FPS for movie
 ApplyBC = false;
 
-N = 20; % num of particles 
+N = 30; % num of particles 
 m = 0.1*ones(N,1); % mass of the particles
 
 timesteps = time/dt+1; %number of timesteps to be calculated
@@ -83,7 +83,7 @@ Z  = zeros(2,timesteps);
 X_bar = zeros([timesteps 1]);
 Y_bar = zeros([timesteps 1]);
 Area_ell = zeros([timesteps 1]);
-Area_conv = zeros([timesteps 1]);
+%Area_conv = zeros([timesteps 1]);
 
 
 
@@ -116,7 +116,7 @@ for t=1:time/dt+1
                 
                 %potential energy
                %V_j(j) = 4*epsilon*((sigma/rij)^12-(L*sigma/rij)^6);
-                V_j(j) = 4*epsilon*(G*exp(-rij/(L*sigma)) - c*exp(-riz/(l*sigma)) - exp(-rij/sigma));
+                V_j(j) = 4*epsilon*(G*exp(-rij/(L*sigma)) + c*exp(-riz/(l*sigma)) - exp(-rij/sigma));
                 %V_j(j) = 4*epsilon*(log(abs(rij)) - Geff*(1/2)*((rij)^2));
             
             else %if i=j: force=0, potential=0
@@ -201,7 +201,6 @@ for t = 1:timesteps
     PosEllip = z + Q*[a * cos(theta); b * sin(theta)];
     orient = mod(alpha*180/pi,360);
     eccen = b/a;
-    [k1,v1] = convhull(x(:,t),y(:,t));
     
     A(t) = a;
     B(t) = b;
@@ -212,7 +211,6 @@ for t = 1:timesteps
     Orient(t) = orient;
     Eccen(t) = eccen;
     Area_ell(t) = pi*a*b;
-    Area_conv(t) = v1;
     
 end 
 
