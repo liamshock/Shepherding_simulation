@@ -7,7 +7,7 @@ clc
 %%% DATA TO CHANGE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % set a path to save all of the results from the simulation
-outpath = '/Users/liam/output';
+outpath = '/Users/liam/output_parfor';
 if ~exist(outpath, 'dir')
   mkdir(outpath);
 end
@@ -25,14 +25,14 @@ G = 0.1;                   % attractive strength
 lambda = 1;                % damping coefficient
 c = 0.4;                   % predator-prey repulsion
 %rep = -1;                 % repulsion from shepherd (set -1 for no shepherd)
-time = 0.5;                 % total time
+time = 20;                 % total time
 dt = 0.001;                % time step
 method = 'Kinematic';      % integration method
 borders = [-30 30 -30 30]; % set [x0 x1 y0 y1] to turn borders on (particles bounce), 0 is off
 fps = 10;                  % FPS for movie
 ApplyBC = false;
 
-N = 20; % num of particles 
+N = 50; % num of particles 
 m = 0.1*ones(N,1); % mass of the particles
 
 timesteps = time/dt+1; %number of timesteps to be calculated
@@ -80,8 +80,7 @@ Eccen = zeros([timesteps 1]);
 Z  = zeros(2,timesteps);
 X_bar = zeros([timesteps 1]);
 Y_bar = zeros([timesteps 1]);
-Area_ell = zeros([timesteps 1]);
-Area_conv = zeros([timesteps 1]);
+Area = zeros([timesteps 1]);
 
 
 
@@ -100,9 +99,6 @@ for t=1:time/dt+1
                 %compute unit normal vector, n(1)=n_x, n(2)=n_y
                 n = [ x(j,t)-x(i,t) y(j,t)-y(i,t) ]/norm([ x(j,t)-x(i,t) y(j,t)-y(i,t) ]);
                 n_z = [ x_z(t)-x(i,t) y_z(t)-y(i,t) ]/norm([ x_z(t)-x(i,t) y_z(t)-y(i,t) ]);
-                
-                %compute effective attractive strength
-                %Geff = G*(1+(j==1)*(-rep-1));
                 
                 %for x direction
                 f_x(j) = -4*epsilon*(n(1)*exp(-rij/sigma)/sigma - n(1)*G*exp(-rij/(L*sigma))/(L*sigma) + n_z(1)*c*exp(-riz/(l*sigma))/(l*sigma));
@@ -186,32 +182,32 @@ end
 %%%%%%%%%%%%% Calculate and plot lumped quantities (energy calculated above) %%%%%%%%%%%%%%%%%%%%%%%%
 
 for t = 1:timesteps 
-    pos_curr = [x(:,t) y(:,t)]';
-%     % Fit ellipse to data 
-%     [z, a, b, alpha] = fitellipse(pos_curr);
-%     Q = [cos(alpha), -sin(alpha); 
-%          sin(alpha), cos(alpha)];
-%     theta = linspace(0,2*pi,360);
-%     PosEllip = z + Q*[a * cos(theta); b * sin(theta)];
-%     orient = mod(alpha*180/pi,360);
-%     eccen = b/a;
-%     [k1,v1] = convhull(x(:,t),y(:,t));
+    x_snapshot = x(:,t);
+    y_snapshot = y(:,t);
+    [k1,v1] = convhull(x(:,t),y(:,t));
     
     Z(:,t) = (1/N)*[sum(x(:,t)) sum(y(:,t))]'; % COM (\bar{x} \bar{y})
     X_bar = Z(1,:)';
     Y_bar = Z(2,:)';
     
+    % fit ellipse and plot 
+    ellipse_t = fit_ellipse(x_snapshot, y_snapshot);
+        
+    % grab ellipse parameters
+    a = ellipse_t.long_axis;
+    b = ellipse_t.short_axis;
+    alpha = ellipse_t.phi;
+    orient = mod(alpha*180/pi,360);
+    eccen = sqrt(1 - ((b/a)^2));
+        
+    % fill-in the ellipse values
+    Alpha(t) = alpha;
+    Orient(t) = orient;
+    Eccen(t) = eccen;
     A(t) = a;
     B(t) = b;
-    save_Z(t,:) = z;
-    save_X_bar(t) = z(1);
-    save_Y_bar(t) = z(2);
-%     Alpha(t) = alpha;
-%     Orient(t) = orient;
-%     Eccen(t) = eccen;
-%     Area_ell(t) = pi*a*b;
-%     Area_conv(t) = v1;
-    
+    Area(t) = v1;
+     
 end 
 
 
@@ -238,10 +234,10 @@ saveas(fig2, fullfile(outpath, fig2_name))
 
 % area
 fig3 = figure(3);
-plot(0:dt:time,Area_ell,'b','linewidth',3)
+plot(0:dt:time,Area,'b','linewidth',3)
 xlabel('Time','FontSize',14)
 ylabel('Area','FontSize',14)
-title('Area using Ellipse fit over time','FontSize',14)
+title('Area of convex hull over time','FontSize',14)
 fig3_name = 'Area.png';
 saveas(fig3, fullfile(outpath, fig3_name))
 
@@ -336,9 +332,12 @@ if ~(strcmp('', moviePath))
         p3 = fill(xx_z,yy_z,'c');
         hold on
         
-        % fit ellipse
-        plotellipse(save_Z(round(k),:), A(round(k)), B(round(k)), Alpha(round(k)))
-      
+        % fit ellipse and plot 
+        % NOTE: We have already fitted the ellipse above. Here we do it
+        %       again to add it to the plot. Fix this
+        ellipse_t = fit_ellipse(x_snapshot, y_snapshot, fig);
+        
+        % set the axes
         set(gca,'DataAspectRatio',[1 1 1]); %set aspect ratio x:y to 1:1
         axis([ax_x ax_y]); %set the axis
         %cleahold on;
@@ -364,6 +363,6 @@ end
 workspacePath = fullfile(outpath, 'Variables');
 save(workspacePath, 'sigma', 'epsilon', 'L', 'l', 'G', 'lambda', 'c', 'time', 'dt', 'method', 'borders', 'ApplyBC', 'fps', ...
                     'N', 'm', 'timesteps', 'V', 'T', 'x', 'y', 'u', 'v', 'f_x', 'f_y', 'V_j', 'A', 'B', 'save_Z', 'save_X_bar', ...
-                    'save_Y_bar', 'Alpha', 'Orient', 'Eccen', 'Z', 'X_bar', 'Y_bar', 'Area_ell', 'Area_conv');
+                    'save_Y_bar', 'Alpha', 'Orient', 'Eccen', 'Z', 'X_bar', 'Y_bar', 'Area');
 
 
