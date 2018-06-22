@@ -25,14 +25,14 @@ G = 0.1;                   % attractive strength
 lambda = 1;                % damping coefficient
 c = 0.4;                   % predator-prey repulsion
 %rep = -1;                 % repulsion from shepherd (set -1 for no shepherd)
-time = 20;                 % total time
+time = 1;                 % total time
 dt = 0.001;                % time step
 method = 'Kinematic';      % integration method
 borders = [-30 30 -30 30]; % set [x0 x1 y0 y1] to turn borders on (particles bounce), 0 is off
 fps = 10;                  % FPS for movie
 ApplyBC = false;
 
-N = 50; % num of particles 
+N = 20; % num of particles 
 m = 0.1*ones(N,1); % mass of the particles
 
 timesteps = time/dt+1; %number of timesteps to be calculated
@@ -197,12 +197,12 @@ for t = 1:timesteps
     a = ellipse_t.long_axis;
     b = ellipse_t.short_axis;
     alpha = ellipse_t.phi;
-    orient = mod(alpha*180/pi,360);
+    %orient = mod(alpha*180/pi,360);
     eccen = sqrt(1 - ((b/a)^2));
         
     % fill-in the ellipse values
     Alpha(t) = alpha;
-    Orient(t) = orient;
+    Orient(t) = alpha;
     Eccen(t) = eccen;
     A(t) = a;
     B(t) = b;
