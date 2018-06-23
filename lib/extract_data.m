@@ -1,13 +1,16 @@
-function [A, B, Orient, Eccen, X_bar, Y_bar, Area] = extract_data(x, y)
+function [A, B, Orient, Eccen, X_bar, Y_bar, Area] = extract_data(x, y, time, dt, N)
 %UNTITLED7 Summary of this function goes here
 %   Detailed explanation goes here
 
 
-% get the number of timesteps and number of particles from X
-x_size = size(x);
-timesteps = x_size(2);
-N = x_size(1);
-    
+% Introductory message
+fprintf('\n\n')
+fprintf('--- Extracting the data ---')  
+fprintf('\n')
+
+% calculate the timesteps
+timesteps = time/dt+1;
+
 % preallocate arrays
 A = zeros([timesteps 1]);
 B = zeros([timesteps 1]);
@@ -19,15 +22,6 @@ Area = zeros([timesteps 1]);
 
 % loop over timesteps
 for t = 1:timesteps
-    
-    % preallocate arrays
-    A = zeros([timesteps 1]);
-    B = zeros([timesteps 1]);
-    Orient = zeros([timesteps 1]);
-    Eccen = zeros([timesteps 1]);
-    X_bar = zeros([timesteps 1]);
-    Y_bar = zeros([timesteps 1]);
-    Area = zeros([timesteps 1]);
 
     % take a snapshot of the positions at this time
     x_snapshot = x(:,t);
@@ -52,5 +46,9 @@ for t = 1:timesteps
     Eccen(t) = sqrt(1 - ((B(t)/A(t))^2));
         
 
-     
 end 
+
+% end of the function
+fprintf('Collective variables extracted')
+fprintf('\n') 
+end

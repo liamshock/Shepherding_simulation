@@ -1,4 +1,4 @@
-function [x, y, u, v, f_x, f_y, V_j, V, T] = run_calculation(seed, sigma, epsilon, L, l, G, ...
+function [x, y, u, v, f_x, f_y, V_j, V, T] = run_simulation(seed, sigma, epsilon, L, l, G, ...
                                                        lambda, c, time, dt, N, mass, ...
                                                        method, borders, ApplyBC, ...
                                                        x_dog, y_dog)
@@ -6,8 +6,11 @@ function [x, y, u, v, f_x, f_y, V_j, V, T] = run_calculation(seed, sigma, epsilo
 % We evolve the position of the sheep over time by applying the forces
 % exerted on each other and the forces exerted by the dog
                                                    
-                                                   
-                                                 
+
+% introductory message
+fprintf('\n\n')
+fprintf('--- Running the simulation ---')  
+fprintf('\n')
 
 % set the seed
 rng(seed)
@@ -50,7 +53,29 @@ V_j = zeros(1,N);       %allocate potential matrix
 
 %%%%%%%%%%%%%%%%%%% Calcualtion part %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-for t=1:time/dt+1
+for t=1:timesteps
+    
+        % print quarterly updates
+    if t == round(timesteps/10)
+        fprintf('1/10 complete \n')
+    elseif t == round(timesteps/5)
+        fprintf('2/10 complete \n')
+    elseif t == round( (3/10)*timesteps)
+        fprintf('3/10 complete \n')
+    elseif t == round( (4/10)*timesteps)
+        fprintf('4/10 complete \n')   
+    elseif t == round(timesteps/2)
+        fprintf('5/10 complete \n')   
+    elseif t == round( (6/10)*timesteps)
+        fprintf('6/10 complete \n')  
+    elseif t == round( (7/10)*timesteps)
+        fprintf('7/10 complete \n')
+    elseif t == round( (8/10)*timesteps)
+        fprintf('8/10 complete \n')
+    elseif t == round( (9/10)*timesteps)
+        fprintf('9/10 complete \n')
+    end
+    
     for i=1:N
         for j=1:N %set force/energy interactions for each particle
             if i~=j %don't take self inducting terms into account
@@ -141,5 +166,7 @@ end
 
 
 % end of the function
+fprintf('Simulation has finished running')
+fprintf('\n')
 end
 
