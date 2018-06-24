@@ -1,2 +1,4 @@
 This is the main library of the code. This folder, and subfolders, contain functions
 that are used in the main script.
+
+Subfolders of this directory contain code/packages that were downloaded from the internet.
