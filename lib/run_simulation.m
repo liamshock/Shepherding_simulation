@@ -1,7 +1,6 @@
-function [x, y, u, v, f_x, f_y, V_j, V, T] = run_simulation(seed, sigma, epsilon, L, l, G, ...
-                                                       lambda, c, time, dt, N, mass, ...
-                                                       method, borders, ApplyBC, ...
-                                                       x_dog, y_dog)
+function [x, y, u, v, f_x, f_y, V_j, V, T, x_dog, y_dog, u_dog, v_dog, x_bar_init, y_bar_init] = run_simulation(tau, x_T, y_T, spd_dog, beta, seed, sigma, epsilon, L, l, G, ...
+                                                                                                               lambda, c, time, dt, N, mass, ...
+                                                                                                               method, borders, ApplyBC, dog_dist)
 % Run the main simulation
 % We evolve the position of the sheep over time by applying the forces
 % exerted on each other and the forces exerted by the dog
@@ -21,7 +20,12 @@ m = mass*ones(N,1);
 %number of timesteps to be calculated
 timesteps = time/dt+1;
 
+% set number of dogs
+N_dogs = 1;
+
 % initialize variables 
+
+% sheep
 x = zeros(N,timesteps); 
 y = x;  
 u = x; 
@@ -30,6 +34,20 @@ v = x;
 % Initial random positions for sheep
 x0 = borders(1) + (borders(2)-borders(1))*rand(N,1); 
 y0 = borders(3) + (borders(4)-borders(3))*rand(N,1);
+
+% dogs
+x_dog = zeros(N_dogs, timesteps);
+y_dog = x_dog;
+v_dog = x_dog;
+u_dog = x_dog;
+
+% Initial random positions for dogs (first frame)
+% NOTE: FOR ONE DOG
+x_dog(1, :) = -10;
+y_dog(1, :) = -10;
+v_dog(1, :) = 0;
+u_dog(1, :) = 0;
+
 
 % initial velocities 
 thet0 = 2*pi*rand(N,1); 
@@ -53,6 +71,15 @@ V_j = zeros(1,N);       %allocate potential matrix
 
 %%%%%%%%%%%%%%%%%%% Calcualtion part %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+     
+
+       
+    
+    
+    
+    
+    
 for t=1:timesteps
     
         % print quarterly updates
@@ -82,11 +109,11 @@ for t=1:timesteps
                 
                 %compute the distance
                 rij = sqrt((x(i,t) - x(j,t))^2+ (y(i,t)-y(j,t))^2);
-                riz = sqrt((x(i,t) - x_dog(t))^2+(y(i,t)-y_dog(t))^2);
+                riz = sqrt((x(i,t) - x_dog(1,t))^2+(y(i,t)-y_dog(1,t))^2);
                 
                 %compute unit normal vector, n(1)=n_x, n(2)=n_y
                 n = [ x(j,t)-x(i,t) y(j,t)-y(i,t) ]/norm([ x(j,t) - x(i,t) y(j,t)- y(i,t) ]);
-                n_z = [ x_dog(t)-x(i,t) y_dog(t)-y(i,t) ]/norm([ x_dog(t) - x(i,t) y_dog(t) - y(i,t) ]);
+                n_z = [ x_dog(1,t)-x(i,t) y_dog(1,t)-y(i,t) ]/norm([ x_dog(1,t) - x(i,t) y_dog(1,t) - y(i,t) ]);
                 
                 %for x direction
                 f_x(j) = -4*epsilon*(n(1)*exp(-rij/sigma)/sigma - n(1)*G*exp(-rij/(L*sigma))/(L*sigma) + n_z(1)*c*exp(-riz/(l*sigma))/(l*sigma));
@@ -162,6 +189,50 @@ for t=1:timesteps
         V(i,t) = sum(V_j); %Potential energy: sum of influence of other particles
         T(i,t) = 1/2*m(i)*(v(i,t)^2+u(i,t)^2); %Kinetic energy: 1/2mv^2
     end
+    
+    
+    % define theta after tau steps
+    if t == tau
+        z_bar = (1/N)*[sum(x(:,t)) sum(y(:,t))]'; % COM (\bar{x} \bar{y})
+        x_bar_init = z_bar(1);
+        y_bar_init = z_bar(2);
+        theta = atan2(y_T - y_bar_init, x_T - x_bar_init);
+    end
+    
+
+    
+    % after transients
+    if t > tau
+        
+       
+        % above or below the line? Use cross product
+        x_bar = (1/N)*(sum(x(:,t)));
+        y_bar = (1/N)*sum(y(:,t));
+        z_bar = [x_bar y_bar];   
+        CM_T = [x_T - x_bar_init, y_T - y_bar_init];
+        stack = [z_bar; CM_T];
+        sign_det = sign(det(stack));
+    
+        % define phi
+        if sign_det < 0
+            phi = (3*pi/2) + theta + beta;
+        else
+            phi = theta + (pi/2) - beta;
+        end
+        
+        % calculate error
+        error_modulus = find_error_modulus(x_bar_init, y_bar_init, x_bar, y_bar, theta);
+        
+        % find the desired position of the dog
+        [x_dog_desired, y_dog_desired] = dog_position(x_bar, y_bar, phi, dog_dist);
+                      
+        % update dog position and velocity
+        v_dog(1, t+1) = ((x_dog_desired - x_dog(1,t)) / norm(x_dog_desired - x_dog(1,t)))*spd_dog;
+        u_dog(1, t+1) = ((y_dog_desired - y_dog(1,t)) / norm(y_dog_desired - y_dog(1,t)))*spd_dog;
+        x_dog(1, t+1) = x_dog(1, t) + v_dog(1, t+1)*dt;
+        y_dog(1, t+1) = y_dog(1, t) + u_dog(1, t+1)*dt;
+    end
+    
 end
 
 

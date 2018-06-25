@@ -26,16 +26,26 @@ epsilon = 15;                             % material parameter
 L = 20;                                   % attractive length in particle diameters
 l = 5;                                    % repulsive length from the predator
 G = 0.1;                                  % attractive strength
-lambda = 1;                               % damping coefficient
+lambda = 0.2;                              % damping coefficient
 c = 0.4;                                  % predator-prey repulsion
-time = 2;                                 % total time
+time = 20;                                 % total time
 dt = 0.001;                               % time step
 method = 'Kinematic';                     % integration method
-borders = [-30 30 -30 30];                % set [x0 x1 y0 y1] to turn borders on (particles bounce), 0 is off
+borders = [0 30 0 30];                    % set [x0 x1 y0 y1] to turn borders on (particles bounce), 0 is off
 ApplyBC = false;                          % should we use the boundary conditions
 N = 20;                                   % num of particles 
 mass = 0.1;                               % 'social mass' of the sheep
 fps = 10;                                 % FPS for movie
+
+x_T = 40;                                 % desired target 
+y_T = 40;
+spd_dog = 5;
+beta = pi/3;
+dog_dist = 1*N;
+
+% should be less than time
+tau = 3/dt; 
+
 
 
 
@@ -43,11 +53,11 @@ fps = 10;                                 % FPS for movie
 %%%%%%%%%%%%%%% Prescribe the dog motions %%%%%%%%%%%%%
 
 % Init Position and velocity of a single Predator
-thet0_z = linspace(0,4*pi,time/dt+1); 
-x_dog = 5.*cos(thet0_z)+15; 
-y_dog = 5.*sin(thet0_z)+15;
-v_dog = -5.*sin(thet0_z); 
-u_dog = 5.*cos(thet0_z);
+% thet0_z = linspace(0,4*pi,time/dt+1); 
+% x_dog = 5.*cos(thet0_z)+15; 
+% y_dog = 5.*sin(thet0_z)+15;
+% v_dog = -5.*sin(thet0_z); 
+% u_dog = 5.*cos(thet0_z);
 
 
 
@@ -55,10 +65,10 @@ u_dog = 5.*cos(thet0_z);
 %%%%%%%%%%%%%%%%%% Main body %%%%%%%%%%%%%%%%%%%%%%%%%
 
 % run the main simulation
-[x, y, u, v, f_x, f_y, V_j, T, V] = run_simulation(seed, sigma, epsilon, L, l, G, ...
-                                                   lambda, c, time, dt, N, mass, ...
-                                                   method, borders, ApplyBC, ...
-                                                   x_dog, y_dog);
+[x, y, u, v, f_x, f_y, V_j, T, V, x_dog, y_dog, u_dog, v_dog, x_bar_init, y_bar_init] = run_simulation(tau, x_T, y_T, spd_dog, beta, ...
+                                                                               seed, sigma, epsilon, L, l, G, ...
+                                                                               lambda, c, time, dt, N, mass, ...
+                                                                               method, borders, ApplyBC, dog_dist);
                                           
 % extract the data arrays
 [A, B, orientation, eccentricity, X_bar, Y_bar, area] = extract_data(x, y, time, dt, N);
@@ -67,7 +77,7 @@ u_dog = 5.*cos(thet0_z);
 plot_functions(outpath, time, dt, N, orientation, eccentricity, area, X_bar, Y_bar, T, V)
 
 % write the movie
-make_movie(outpath, sigma, dt, time, fps, N, ApplyBC, borders, x, y, u, v, x_dog, y_dog, u_dog, v_dog)
+make_movie(outpath, sigma, dt, time, fps, N, ApplyBC, borders, x, y, u, v, x_dog, y_dog, u_dog, v_dog, x_bar_init, y_bar_init, x_T, y_T)
 
 % save the workspace 
 workspacePath = fullfile(outpath, 'Variables');

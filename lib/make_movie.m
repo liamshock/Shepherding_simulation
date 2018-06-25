@@ -1,4 +1,4 @@
-function [] = make_movie(outpath, sigma, dt, time, fps, N, ApplyBC, borders, x, y, u, v, x_dog, y_dog, u_dog, v_dog)
+function [] = make_movie(outpath, sigma, dt, time, fps, N, ApplyBC, borders, x, y, u, v, x_dog, y_dog, u_dog, v_dog, x_bar_init, y_bar_init, x_T, y_T)
 % Make and write a movie of the simulation results
 
 
@@ -19,8 +19,8 @@ if ApplyBC %if borders are given set the axis equal to the borders
     ax_x = borders(1:2);
     ax_y = borders(3:4);
 else %if not set the axis automatically to the highest traveled distance of the particles
-    ax_x = [min(min(x))-0.5*sigma max(max(x))+0.5*sigma]; %x axis
-    ax_y = [min(min(y))-0.5*sigma max(max(y))+0.5*sigma]; %y axis for 2D
+    ax_x = [min([min(min(x)),borders(1),min(x_dog)])-0.5*sigma max([max(max(x)),borders(2),max(x_dog)])+0.5*sigma]; %x axis
+    ax_y = [min([min(min(y)),borders(3),min(y_dog)])-0.5*sigma max([max(max(y)),borders(4),max(y_dog)])+0.5*sigma]; %y axis for 2D
 end
 
 
@@ -108,8 +108,11 @@ for k=1:interval:timesteps
     axis([ax_x ax_y]); %set the axis
     %cleahold on;
     %title('\fontsize{14} Circular motion of dog');
-    legend([p1,p2,p3],'Sheeps','convex hull','Dog')
-
+    legend([p1,p2,p3],'Sheep','Convex Hull','Dog', 'Location','northwest')
+    
+    % plot the trajectory line
+    plot([x_bar_init x_T], [y_bar_init y_T]);
+    
     %make the movie
     F=getframe(fig);
     open(mov);
