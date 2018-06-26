@@ -19,16 +19,18 @@
 
 %%%%%%%%%%%%%%%%%   Parameters %%%%%%%%%%%%%%%%%%%%%%
 
-outpath = '/Users/liam/output';           % the directory where information will be saved
+% the directory where information will be saved
+outpath = strcat('/Users/liam/output/', datestr(datetime('now')));
+
 seed = 4;                                 % the seed for the random number generator
 sigma = 1;                                % particle diameter
 epsilon = 15;                             % material parameter
 L = 20;                                   % attractive length in particle diameters
 l = 5;                                    % repulsive length from the predator
 G = 0.1;                                  % attractive strength
-lambda = 0.2;                              % damping coefficient
+lambda = 0.2;                             % damping coefficient
 c = 0.4;                                  % predator-prey repulsion
-time = 20;                                 % total time
+time = 4;                                 % total time
 dt = 0.001;                               % time step
 method = 'Kinematic';                     % integration method
 borders = [0 30 0 30];                    % set [x0 x1 y0 y1] to turn borders on (particles bounce), 0 is off
