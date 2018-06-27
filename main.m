@@ -22,7 +22,8 @@ clc
 
 %%%%%%%%%%%%%%%%%   Parameters %%%%%%%%%%%%%%%%%%%%%%
 
-outpath = strcat('/Users/magrogan4/desktop/output/', datestr(datetime('now')));           % the directory where information will be saved
+% the directory where information will be saved
+outpath = strcat('/Users/liam/output/', datestr(datetime('now')));           
 seed = 4;                                 % the seed for the random number generator
 
 N_dogs = 3;                               % num of dogs
@@ -41,7 +42,7 @@ mass = 0.1;                               % 'social mass' of the sheep
 
 c = 0.5*ones(N_dogs,1);                   % predator-prey repulsion
 maxv = 1;                                 % max velocity of sheep
-time = 10;                                % total time
+time = 3;                                % total time
 dt = 0.0001;                              % time step
 method = 'Kinematic';                     % integration method
 borders = [0 10 0 10];                    % set [x0 x1 y0 y1] to turn borders on (particles bounce), 0 is off
@@ -56,7 +57,7 @@ beta = pi/3;
 dog_dist = sqrt(N).*ones(N_dogs,1);
 
 % should be less than time
-tau = 1/dt; 
+tau = 2/dt; 
 
 
 %%%%%%%%%%%%%%% Prescribe the dog motions %%%%%%%%%%%%%
