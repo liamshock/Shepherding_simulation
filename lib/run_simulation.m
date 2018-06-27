@@ -1,6 +1,6 @@
-function [x, y, u, v, f_x, f_y, V_j, V, T, x_dog, y_dog, u_dog, v_dog, x_bar_init, y_bar_init] = run_simulation(tau, x_T, y_T, spd_dog, beta, seed, sigma, epsilon, L, l, G, ...
+function [x, y, u, v, f_x, f_y, V_j, V, T, x_dog, y_dog, u_dog, v_dog, x_bar_init, y_bar_init] = run_simulation(maxv, tau, x_T, y_T, spd_dog, beta, seed, sigma, epsilon, L, l, G, ...
                                                                                                                lambda, c, time, dt, N, mass, ...
-                                                                                                               method, borders, ApplyBC, dog_dist)
+                                                                                                               method, borders, ApplyBC, dog_dist, N_dogs)
 % Run the main simulation
 % We evolve the position of the sheep over time by applying the forces
 % exerted on each other and the forces exerted by the dog
@@ -15,13 +15,11 @@ fprintf('\n')
 rng(seed)
                 
 % assign the mass of the particles
-m = mass*ones(N,1); 
+m = mass*ones(N,1);       %used for Euler or Verlet only
 
 %number of timesteps to be calculated
-timesteps = time/dt+1;
+timesteps = round(time/dt)+1;
 
-% set number of dogs
-N_dogs = 1;
 
 % initialize variables 
 
@@ -43,10 +41,12 @@ u_dog = x_dog;
 
 % Initial random positions for dogs (first frame)
 % NOTE: FOR ONE DOG
-x_dog(1, :) = -10;
-y_dog(1, :) = -10;
-v_dog(1, :) = 0;
-u_dog(1, :) = 0;
+% x_dog(:, 1) = -10*ones(N_dogs,1);
+% y_dog(:, 1) = -10*ones(N_dogs,1);
+x_dog(:, 1) = [-2;-1;0];
+y_dog(:, 1) = [-2;-1;0];
+v_dog(:, 1) = zeros(N_dogs,1);
+u_dog(:, 1) = zeros(N_dogs,1);
 
 
 % initial velocities 
@@ -68,17 +68,15 @@ f_x = zeros(1,N);       %allocate force matrix x-direction
 f_y = zeros(1,N);       %allocate force matrix y-direction
 V_j = zeros(1,N);       %allocate potential matrix
 
+riz = zeros(N_dogs,1);
+n_dog = zeros(N_dogs,2);
+% f_xdog = zeros(1,N);
+% f_ydog = zeros(1,N);
+V_jdog = zeros(1,N);
+
 
 %%%%%%%%%%%%%%%%%%% Calcualtion part %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
-     
-
-       
-    
-    
-    
-    
     
 for t=1:timesteps
     
@@ -109,21 +107,50 @@ for t=1:timesteps
                 
                 %compute the distance
                 rij = sqrt((x(i,t) - x(j,t))^2+ (y(i,t)-y(j,t))^2);
-                riz = sqrt((x(i,t) - x_dog(1,t))^2+(y(i,t)-y_dog(1,t))^2);
+                for k = 1:N_dogs
+                    riz(k) = sqrt((x(i,t) - x_dog(k,t))^2+(y(i,t)-y_dog(k,t))^2);
+                end
                 
                 %compute unit normal vector, n(1)=n_x, n(2)=n_y
                 n = [ x(j,t)-x(i,t) y(j,t)-y(i,t) ]/norm([ x(j,t) - x(i,t) y(j,t)- y(i,t) ]);
-                n_z = [ x_dog(1,t)-x(i,t) y_dog(1,t)-y(i,t) ]/norm([ x_dog(1,t) - x(i,t) y_dog(1,t) - y(i,t) ]);
+                
+                for k = 1:N_dogs
+                    n_dog (k,:)= [ x_dog(k,t)-x(i,t) y_dog(k,t)-y(i,t)]/norm([ x_dog(k,t) - x(i,t) y_dog(k,t) - y(i,t)]);
+                end
+                
+                f_xdog_timestep = zeros(N_dogs, 1);
+                f_ydog_timestep = zeros(N_dogs, 1);
+                V_jdog_timestep = zeros(N_dogs, 1);
+                for k = 1:N_dogs
+%                     for x direction: force between Prey & predator
+                    %f_xdog_timestep(k) = (n_dog(k,1)*c(k)*exp(-riz(k)/(l(k)*sigma))/(l(k)*sigma));
+                    f_xdog_timestep(k) = n_dog(k,1)*c(k)/riz(k);
+
+%                     for y direction: force between Prey & predator
+                    %f_ydog_timestep(k) = (n_dog(k,2)*c(k)*exp(-riz(k)/(l(k)*sigma))/(l(k)*sigma));
+                    f_ydog_timestep(k) = n_dog(k,2)*c(k)/riz(k); 
+                    
+%                     potential energy for dogs only
+                    %V_jdog(k) =  V_jdog(k) - c(k)*exp(-riz(k)/(l(k)*sigma));
+                    V_jdog_timestep(k) = c(k)*log(abs(riz(k)));
+%                 
+                end
+                dog_forces_x = sum(f_xdog_timestep);
+                dog_forces_y = sum(f_ydog_timestep);
+                dog_potentials = sum(V_jdog_timestep);
                 
                 %for x direction
-                f_x(j) = -4*epsilon*(n(1)*exp(-rij/sigma)/sigma - n(1)*G*exp(-rij/(L*sigma))/(L*sigma) + n_z(1)*c*exp(-riz/(l*sigma))/(l*sigma));
+                %f_x(j) = -4*epsilon*(n(1)*exp(-rij/sigma)/sigma - n(1)*G*exp(-rij/(L*sigma))/(L*sigma) + dog_forces_x);
+                f_x(j) = -((n(1)/rij - n(1)*rij) + dog_forces_x);
                 
                 %for y direction
-                f_y(j) = -4*epsilon*(n(2)*exp(-rij/sigma)/sigma - n(2)*G*exp(-rij/(L*sigma))/(L*sigma) + n_z(2)*c*exp(-riz/(l*sigma))/(l*sigma));
+                %f_y(j) = -4*epsilon*(n(2)*exp(-rij/sigma)/sigma - n(2)*G*exp(-rij/(L*sigma))/(L*sigma) + dog_forces_y);
+                f_y(j) = -((n(2)/rij - n(2)*rij) + dog_forces_y);
                 
                 %potential energy
-                V_j(j) = 4*epsilon*(-sigma*exp(-rij/sigma) + G*exp(-rij/(L*sigma)) - c*exp(-riz/(l*sigma)));
-            
+                %V_j(j) = 4*epsilon*(-sigma*exp(-rij/sigma) + G*exp(-rij/(L*sigma)) - c(1)*exp(-riz(1)/(l(1)*sigma)) + V_jdog(j));
+                V_j(j) = (log(abs(rij)) - 0.5*rij^2) + dog_potentials;
+                
             else %if i=j: force=0, potential=0
                 f_x(j) = 0;
                 f_y(j) = 0;
@@ -135,11 +162,11 @@ for t=1:timesteps
         if (strcmp('Kinematic',method)) %first timestap is always Euler   
             % Forward Euler x
             v(i,t+1) = sum(f_x)/lambda;
-            x(i,t+1) = x(i,t) + v(i,t+1)*dt;
+            x(i,t+1) = x(i,t) + sign(v(i,t+1))*min(abs(v(i,t+1)), maxv)*dt;
             
             % Forward Euler y
             u(i,t+1) = sum(f_y)/lambda;
-            y(i,t+1) = y(i,t) + u(i,t+1)*dt;
+            y(i,t+1) = y(i,t) + sign(u(i,t+1))*min(abs(u(i,t+1)), maxv)*dt;
             
         elseif(strcmp('Euler',method) || t==1)
             % Forward Euler x
@@ -221,16 +248,18 @@ for t=1:timesteps
         end
         
         % calculate error
-        error_modulus = find_error_modulus(x_bar_init, y_bar_init, x_bar, y_bar, theta);
-        
+        %error_modulus = find_error_modulus(x_bar_init, y_bar_init, x_bar, y_bar, theta);
+      
         % find the desired position of the dog
-        [x_dog_desired, y_dog_desired] = dog_position(x_bar, y_bar, phi, dog_dist);
+        [x_dog_desired, y_dog_desired] = dog_position(x_bar, y_bar, phi, N_dogs, dog_dist);
                       
-        % update dog position and velocity
-        v_dog(1, t+1) = ((x_dog_desired - x_dog(1,t)) / norm(x_dog_desired - x_dog(1,t)))*spd_dog;
-        u_dog(1, t+1) = ((y_dog_desired - y_dog(1,t)) / norm(y_dog_desired - y_dog(1,t)))*spd_dog;
-        x_dog(1, t+1) = x_dog(1, t) + v_dog(1, t+1)*dt;
-        y_dog(1, t+1) = y_dog(1, t) + u_dog(1, t+1)*dt;
+%         % update dog position and velocity
+        for k = 1:N_dogs
+            v_dog(k, t+1) = ((x_dog_desired(k) - x_dog(k,t)) / norm(x_dog_desired(k) - x_dog(k,t)))*spd_dog(k);
+            u_dog(k, t+1) = ((y_dog_desired(k) - y_dog(k,t)) / norm(y_dog_desired(k) - y_dog(k,t)))*spd_dog(k);
+            x_dog(k, t+1) = x_dog(k, t) + v_dog(k, t+1)*dt;
+            y_dog(k, t+1) = y_dog(k, t) + u_dog(k, t+1)*dt;
+        end
     end
     
 end

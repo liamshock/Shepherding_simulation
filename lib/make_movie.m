@@ -1,4 +1,4 @@
-function [] = make_movie(outpath, sigma, dt, time, fps, N, ApplyBC, borders, x, y, u, v, x_dog, y_dog, u_dog, v_dog, x_bar_init, y_bar_init, x_T, y_T)
+function [] = make_movie(outpath, sigma, dt, time, fps, N, ApplyBC, borders, x, y, u, v, x_dog, y_dog, u_dog, v_dog, x_bar_init, y_bar_init, x_T, y_T, N_dogs)
 % Make and write a movie of the simulation results
 
 
@@ -69,8 +69,8 @@ for k=1:interval:timesteps
     %plot N circles
     for n=1:N
         THETHA = atan2(u(n,round(k)),v(n,round(k)));
-        xx = sigma/2*cos(circle)*cos(THETHA) - sigma/4*sin(circle)*sin(THETHA) + x(n,round(k)); %x-location of particle                  
-        yy = sigma/2*cos(circle)*sin(THETHA) + sigma/4*sin(circle)*cos(THETHA) + y(n,round(k)); %y-location of particle
+        xx = 0.05*cos(circle)*cos(THETHA) - 0.02*sin(circle)*sin(THETHA) + x(n,round(k)); %x-location of particle                  
+        yy = 0.05*cos(circle)*sin(THETHA) + 0.02*sin(circle)*cos(THETHA) + y(n,round(k)); %y-location of particle
         color = [abs(v(n,round(k)))/max(max(abs(v))) 0 abs(u(n,round(k)))/max(max(abs(u)))];
         %color is based on the max velocity in v and u direction
         %red = high v, blue = high u, or combo
@@ -91,11 +91,13 @@ for k=1:interval:timesteps
     hold on;
 
     % plot the predator
-    THETHA_z = atan2(u_dog(round(k)), v_dog(round(k)));
-    xx_z = sigma/2*cos(circle)*cos(THETHA_z) - sigma/4*sin(circle)*sin(THETHA_z) + x_dog(round(k)); %x-location of particle                  
-    yy_z = sigma/2*cos(circle)*sin(THETHA_z) + sigma/4*sin(circle)*cos(THETHA_z) + y_dog(round(k)); %y-location of particle
-    p3 = fill(xx_z,yy_z,'c');
-    hold on
+    for i = 1:N_dogs
+        THETHA_z = atan2(u_dog(i,round(k)), v_dog(i,round(k)));
+        xx_z = 0.05*cos(circle)*cos(THETHA_z) - 0.02*sin(circle)*sin(THETHA_z) + x_dog(i,round(k)); %x-location of particle                  
+        yy_z = 0.05*cos(circle)*sin(THETHA_z) + 0.02*sin(circle)*cos(THETHA_z) + y_dog(i,round(k)); %y-location of particle
+        p3 = fill(xx_z,yy_z,'c');
+    end
+        hold on
 
     % fit ellipse and plot 
     % NOTE: We have already fitted the ellipse in the 'extract_data'
