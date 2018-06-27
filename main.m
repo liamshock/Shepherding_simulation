@@ -22,6 +22,13 @@
 % the directory where information will be saved
 outpath = strcat('/Users/liam/output/', datestr(datetime('now')));
 
+% set the directory where the code is being stored (we will save a copy)
+codeDirectory = '/Users/liam/code/Shepherding_simulation';
+
+% save a copy of the code as it currently stands
+save_all_code(codeDirectory, outpath);
+
+
 seed = 4;                                 % the seed for the random number generator
 sigma = 1;                                % particle diameter
 epsilon = 15;                             % material parameter
@@ -86,5 +93,6 @@ workspacePath = fullfile(outpath, 'Variables');
 save(workspacePath, 'sigma', 'epsilon', 'L', 'l', 'G', 'lambda', 'c', 'time', 'dt', 'method', 'borders', 'ApplyBC', 'fps', ...
                     'N', 'mass', 'V', 'T', 'x', 'y', 'u', 'v', 'f_x', 'f_y', 'V_j', 'A', 'B', ...
                     'orientation', 'eccentricity', 'X_bar', 'Y_bar', 'area');
+                
 
 
