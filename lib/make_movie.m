@@ -1,4 +1,4 @@
-function [] = make_movie(outpath, sigma, dt, time, fps, N, ApplyBC, borders, x, y, u, v, x_dog, y_dog, u_dog, v_dog, x_bar_init, y_bar_init, x_T, y_T, N_dogs)
+function [] = make_movie(outpath, dt, time, fps, N, ApplyBC, borders, x, y, u, v, x_dog, y_dog, u_dog, v_dog, x_bar_init, y_bar_init, x_T, y_T, N_dogs)
 % Make and write a movie of the simulation results
 
 
@@ -19,8 +19,8 @@ if ApplyBC %if borders are given set the axis equal to the borders
     ax_x = borders(1:2);
     ax_y = borders(3:4);
 else %if not set the axis automatically to the highest traveled distance of the particles
-    ax_x = [min([min(min(x)),borders(1),min(x_dog)])-0.5*sigma max([max(max(x)),borders(2),max(x_dog)])+0.5*sigma]; %x axis
-    ax_y = [min([min(min(y)),borders(3),min(y_dog)])-0.5*sigma max([max(max(y)),borders(4),max(y_dog)])+0.5*sigma]; %y axis for 2D
+    ax_x = [min([min(min(x)),borders(1),min(x_dog)])-0.5 max([max(max(x)),borders(2),max(x_dog)])+0.5]; %x axis
+    ax_y = [min([min(min(y)),borders(3),min(y_dog)])-0.5 max([max(max(y)),borders(4),max(y_dog)])+0.5]; %y axis for 2D
 end
 
 
