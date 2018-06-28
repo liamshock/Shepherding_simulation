@@ -93,8 +93,8 @@ for k=1:interval:timesteps
     % plot the predator
     for i = 1:N_dogs
         THETHA_z = atan2(u_dog(i,round(k)), v_dog(i,round(k)));
-        xx_z = 0.05*cos(circle)*cos(THETHA_z) - 0.02*sin(circle)*sin(THETHA_z) + x_dog(i,round(k)); %x-location of particle                  
-        yy_z = 0.05*cos(circle)*sin(THETHA_z) + 0.02*sin(circle)*cos(THETHA_z) + y_dog(i,round(k)); %y-location of particle
+        xx_z = 0.10*cos(circle)*cos(THETHA_z) - 0.04*sin(circle)*sin(THETHA_z) + x_dog(i,round(k)); %x-location of particle                  
+        yy_z = 0.10*cos(circle)*sin(THETHA_z) + 0.04*sin(circle)*cos(THETHA_z) + y_dog(i,round(k)); %y-location of particle
         p3 = fill(xx_z,yy_z,'c');
     end
         hold on

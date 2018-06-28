@@ -1,4 +1,4 @@
-function [x, y, u, v, f_x, f_y, V_j, V, T, x_dog, y_dog, u_dog, v_dog, x_bar_init, y_bar_init] = run_simulation(maxv, tau, x_T, y_T, spd_dog, beta, seed, ...
+function [x, y, u, v, f_x, f_y, V_j, V, T, x_dog, y_dog, u_dog, v_dog, x_bar_init, y_bar_init, noise_arr] = run_simulation(maxv, tau, x_T, y_T, spd_dog, beta, seed, ...
                                                                                                                 epsilon, c, time, dt, N, mass, ...
                                                                                                                 method, borders, ApplyBC, dog_dist, N_dogs)
 % Run the main simulation
@@ -43,8 +43,8 @@ u_dog = x_dog;
 % NOTE: FOR ONE DOG
 % x_dog(:, 1) = -10*ones(N_dogs,1);
 % y_dog(:, 1) = -10*ones(N_dogs,1);
-x_dog(:, 1) = [-2;-1;0];
-y_dog(:, 1) = [-2;-1;0];
+x_dog(:, 1) = [0;0;0];
+y_dog(:, 1) = [0;0;0];
 v_dog(:, 1) = zeros(N_dogs,1);
 u_dog(:, 1) = zeros(N_dogs,1);
 
@@ -73,6 +73,22 @@ n_dog = zeros(N_dogs,2);
 % f_xdog = zeros(1,N);
 % f_ydog = zeros(1,N);
 %V_jdog = zeros(1,N);
+
+
+
+
+%%%%%%%%%%%%%%%%%% Preallocate Noise %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% use the pink noise function to make an array of noise which will be
+% added to the velocity of the sheep
+initCond=0; bias=0; stdev=0.1; memoryTime=15;
+noise_arr = make_noise_array(N, initCond, bias, stdev, memoryTime, dt, time);
+
+
+
+
+
+
 
 
 %%%%%%%%%%%%%%%%%%% Calcualtion part %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -159,12 +175,17 @@ for t=1:timesteps
         
         %Compute the position and velocity using Euler or Verlet
         if (strcmp('Kinematic',method)) %first timestap is always Euler   
-            % Forward Euler x
-            v(i,t+1) = sum(f_x);
+
+            % first grab the noise X and Y noise components for this sheep
+            vx_noise = noise_arr(t, i, 1);
+            vy_noise = noise_arr(t, i, 2);
+            
+            % Forward Kinematic x
+            v(i,t+1) = sum(f_x) + vx_noise;
             x(i,t+1) = x(i,t) + sign(v(i,t+1))*min(abs(v(i,t+1)), maxv)*dt;
             
-            % Forward Euler y
-            u(i,t+1) = sum(f_y);
+            % Forward Kinematic y
+            u(i,t+1) = sum(f_y) + vy_noise;
             y(i,t+1) = y(i,t) + sign(u(i,t+1))*min(abs(u(i,t+1)), maxv)*dt;
             
         elseif(strcmp('Euler',method) || t==1)
