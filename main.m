@@ -36,7 +36,7 @@ seed = 4;                                 % the seed for the random number gener
 N_dogs = 3;                               % num of dogs
 epsilon = 1;                              % material parameter
 mass = 0.1;                               % 'social mass' of the sheep
-c = 0.0*ones(N_dogs,1);                   % predator-prey repulsion
+c = 1*ones(N_dogs,1);                   % predator-prey repulsion
 maxv = 1;                                 % max velocity of sheep
 time = 5;                                 % total time
 dt = 0.0001;                              % time step
@@ -50,7 +50,7 @@ y_T = 10;                                 % desired x-comp of flock COM
 spd_dog = 2*ones(N_dogs,1);               % speed of the dog
 beta = pi/3;                              % dog driving angle
 dog_dist = sqrt(N).*ones(N_dogs,1);       % the distance the dog keeps from the herd
-tau = 4/dt;                               % num of timesteps we wait for flock relaxation
+tau = 0.01/dt;                               % num of timesteps we wait for flock relaxation
 
 
 

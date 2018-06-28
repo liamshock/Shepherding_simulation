@@ -115,6 +115,37 @@ for k=1:interval:timesteps
     % plot the trajectory line
     plot([x_bar_init x_T], [y_bar_init y_T]);
     
+    
+    % plot check
+    %x_curr = x(:,1); y_curr = y(:,1); xd_curr = x_dog(:,1); yd_curr = y_dog(:,1);
+    %     figure 
+    %     plot(x_curr,y_curr,'*k'); axis equal tight;
+    %     hold on
+    %     plot(xd_curr,yd_curr,'or');
+    %     K  = convhull(x_curr,y_curr);
+    %     plot(x_curr(K),y_curr(K),'b'); 
+    xbar = mean(x_snapshot); ybar = mean(y_snapshot); 
+    %     plot(xbar,ybar,'og'); 
+    %     plot([xbar,x_T],[ybar,y_T],'g'); 
+    Beta = atan2((-ybar+y_T),(-xbar+x_T));
+    %% NB CHANGE beta %%
+    %%
+    DBeta = pi/6;
+    Edel = (2*pi-(DBeta*DBeta+Beta))/4;
+    Th1 = Beta+DBeta+Edel;
+    Th2 = Th1+Edel;
+    Th3 = Th2+Edel;
+    maxDis = max(sqrt((x_snapshot-xbar).^2+(y_snapshot-ybar).^2));
+    radDogDist = 1.1*maxDis;
+    px1 = xbar + radDogDist*cos(Th1); py1 = ybar + radDogDist*sin(Th1);
+    px2 = xbar + radDogDist*cos(Th2); py2 = ybar + radDogDist*sin(Th2);
+    px3 = xbar + radDogDist*cos(Th3); py3 = ybar + radDogDist*sin(Th3);
+    targetXdog = [px1,px2,px3]; targetYdog = [py1,py2,py3];
+        plot([xbar,px1],[ybar,py1],'x-r'); 
+        plot([xbar,px2],[ybar,py2],'x-r'); 
+        plot([xbar,px3],[ybar,py3],'x-r'); 
+
+
     %make the movie
     F=getframe(fig);
     open(mov);

@@ -65,8 +65,8 @@ u_dog = x_dog;
 
 
 % Initial random positions for dogs (first frame)
-x_dog(:, 1:tau+1) = [0;0;1]*ones(1,tau+1);
-y_dog(:, 1:tau+1) = [0;1;0]*ones(1,tau+1);
+x_dog(:, 1:tau+1) = [-0.1;0;0.1]*ones(1,tau+1);
+y_dog(:, 1:tau+1) = [0;0.1;0]*ones(1,tau+1);
 v_dog(:, 1:tau+1) = zeros(N_dogs,1)*ones(1,tau+1);
 u_dog(:, 1:tau+1) = zeros(N_dogs,1)*ones(1,tau+1);
 
@@ -133,6 +133,50 @@ for t=1:timesteps
     elseif t == round( (9/10)*timesteps)
         fprintf('9/10 complete \n')
     end
+    
+    
+%     % plot check
+%     x_curr = x(:,1); y_curr = y(:,1); xd_curr = x_dog(:,1); yd_curr = y_dog(:,1);
+%     %     figure 
+%     %     plot(x_curr,y_curr,'*k'); axis equal tight;
+%     %     hold on
+%     %     plot(xd_curr,yd_curr,'or');
+%     %     K  = convhull(x_curr,y_curr);
+%     %     plot(x_curr(K),y_curr(K),'b'); 
+%     xbar = mean(x_curr); ybar = mean(y_curr); 
+%     %     plot(xbar,ybar,'og'); 
+%     %     plot([xbar,x_T],[ybar,y_T],'g'); 
+%     Beta = atan2((-ybar+y_T),(-xbar+x_T));
+%     DBeta = pi/6;
+%     Edel = (2*pi-(DBeta*DBeta+Beta))/4;
+%     Th1 = Beta+DBeta+Edel;
+%     Th2 = Th1+Edel;
+%     Th3 = Th2+Edel;
+%     maxDis = max(sqrt((x_curr-xbar).^2+(y_curr-ybar).^2))
+%     radDogDist = 1.1*maxDis;
+%     px1 = xbar + radDogDist*cos(Th1); py1 = ybar + radDogDist*sin(Th1);
+%     px2 = xbar + radDogDist*cos(Th2); py2 = ybar + radDogDist*sin(Th2);
+%     px3 = xbar + radDogDist*cos(Th3); py3 = ybar + radDogDist*sin(Th3);
+%     targetXdog = [px1,px2,px3]; targetYdog = [py1,py2,py3];
+%     %     plot([xbar,px1],[ybar,py1],'x-r'); 
+%     %     plot([xbar,px2],[ybar,py2],'x-r'); 
+%     %     plot([xbar,px3],[ybar,py3],'x-r'); 
+%     
+%     DDMat = zeros(N_dogs,N_dogs);
+%     DogDestIdx = nan(N_dogs,1);
+%     for kkdog = 1:N_dogs
+%     DDMat(kkdog,:) = sqrt((xd_curr(kkdog)-targetXdog).^2+(yd_curr(kkdog)-targetYdog).^2);
+%     end
+%         
+%     for kkdog = 1:N_dogs
+%     [~,idx] = min(DDMat(kkdog,:));
+%     DogDestIdx(kkdog) = idx;
+%     DDMat(:,idx) = 1000;
+%     end
+%     
+%     targetXdogFinal = targetXdog(DogDestIdx);
+%     targetYdogFinal = targetYdog(DogDestIdx);
+
     
     for i=1:N
         for j=1:N %set force/energy interactions for each particle
@@ -267,7 +311,12 @@ for t=1:timesteps
         end
       
         % find the desired position of the dog
-        [x_dog_desired, y_dog_desired] = dog_position(x_bar, y_bar, phi, N_dogs, dog_dist);
+%         [x_dog_desired, y_dog_desired] = dog_position(x_bar, y_bar, phi, N_dogs, dog_dist);
+         maxDis = max(sqrt((x(:,t)-x_bar).^2+(y(:,t)-y_bar).^2));
+         xd_curr = x_dog(:,t); yd_curr = y_dog(:,t);
+         DBeta = pi/6;
+        [x_dog_desired, y_dog_desired] = dog_position_v2(xd_curr,yd_curr,x_bar, y_bar, phi, N_dogs, dog_dist, x_T, y_T, maxDis, DBeta);
+
                       
 %         % update dog position and velocity
         for k = 1:N_dogs
