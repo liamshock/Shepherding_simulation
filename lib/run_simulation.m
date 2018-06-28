@@ -1,6 +1,9 @@
-function [x, y, u, v, f_x, f_y, V_j, V, T, x_dog, y_dog, u_dog, v_dog, x_bar_init, y_bar_init, noise_arr] = run_simulation(maxv, tau, x_T, y_T, spd_dog, beta, seed, ...
-                                                                                                                epsilon, c, time, dt, N, mass, ...
-                                                                                                                method, borders, ApplyBC, dog_dist, N_dogs)
+function [x, y, u, v, f_x, f_y, V_j, V, T, x_dog, y_dog, u_dog, v_dog, x_bar_init, y_bar_init, noise_arr] = run_simulation(maxv, tau, x_T, y_T, ...
+                                                                                                                           spd_dog, beta, seed, ...
+                                                                                                                           epsilon, c, time, dt, ...
+                                                                                                                           N, mass, method, ...
+                                                                                                                           borders, ApplyBC, ...
+                                                                                                                           dog_dist, N_dogs)
 % Run the main simulation
 % We evolve the position of the sheep over time by applying the forces
 % exerted on each other and the forces exerted by the dog
@@ -12,18 +15,19 @@ fprintf('--- Running the simulation ---')
 fprintf('\n')
 
 % set the seed
-rng(seed)
-                
-% assign the mass of the particles
-m = mass*ones(N,1);       %used for Euler or Verlet only
+rng(seed)            
 
 %number of timesteps to be calculated
 timesteps = round(time/dt)+1;
 
 
-% initialize variables 
 
-% sheep
+
+
+%%%%%%%%%%%%%%%%%% Set up the sheep %%%%%%%%%%%%%%%%%%
+
+
+% initialize sheep arrays
 x = zeros(N,timesteps); 
 y = x;  
 u = x; 
@@ -32,22 +36,6 @@ v = x;
 % Initial random positions for sheep
 x0 = borders(1) + (borders(2)-borders(1))*rand(N,1); 
 y0 = borders(3) + (borders(4)-borders(3))*rand(N,1);
-
-% dogs
-x_dog = zeros(N_dogs, timesteps);
-y_dog = x_dog;
-v_dog = x_dog;
-u_dog = x_dog;
-
-% Initial random positions for dogs (first frame)
-% NOTE: FOR ONE DOG
-% x_dog(:, 1) = -10*ones(N_dogs,1);
-% y_dog(:, 1) = -10*ones(N_dogs,1);
-x_dog(:, 1) = [0;0;0];
-y_dog(:, 1) = [0;0;0];
-v_dog(:, 1) = zeros(N_dogs,1);
-u_dog(:, 1) = zeros(N_dogs,1);
-
 
 % initial velocities 
 thet0 = 2*pi*rand(N,1); 
@@ -61,18 +49,47 @@ y(:,1) = y0;
 u(:,1) = u0;
 v(:,1) = v0;
 
-% initialize more variables
-V = zeros(N,timesteps); %allocate potential energy array
-T = zeros(N,timesteps); %allocate kinetic energy array
-f_x = zeros(1,N);       %allocate force matrix x-direction
-f_y = zeros(1,N);       %allocate force matrix y-direction
-V_j = zeros(1,N);       %allocate potential matrix
 
-riz = zeros(N_dogs,1);
-n_dog = zeros(N_dogs,2);
-% f_xdog = zeros(1,N);
-% f_ydog = zeros(1,N);
-%V_jdog = zeros(1,N);
+
+
+
+
+
+%%%%%%%%%%%%%%%%%% Set up the dogs %%%%%%%%%%%%%%%%%%%%
+
+% initialize the dog arrays
+x_dog = zeros(N_dogs, timesteps);
+y_dog = x_dog;
+v_dog = x_dog;
+u_dog = x_dog;
+
+
+% Initial random positions for dogs (first frame)
+x_dog(:, 1:tau+1) = [0;5;5]*ones(1,tau+1);
+y_dog(:, 1:tau+1) = [0;5;0]*ones(1,tau+1);
+v_dog(:, 1:tau+1) = zeros(N_dogs,1)*ones(1,tau+1);
+u_dog(:, 1:tau+1) = zeros(N_dogs,1)*ones(1,tau+1);
+
+
+
+
+
+
+
+%%%%%%%%%%%%%%% Initialize more variables %%%%%%%%%%%%%%%%
+
+m = mass*ones(N,1);         % allocate sheep masses (Euler/Verlet only)
+V = zeros(N,timesteps);     % allocate potential energy array
+T = zeros(N,timesteps);     % allocate kinetic energy array
+f_x = zeros(1,N);           % allocate force matrix x-direction
+f_y = zeros(1,N);           % allocate force matrix y-direction
+V_j = zeros(1,N);           % allocate potential matrix
+riz = zeros(N_dogs,1);      % allocate dog-sheep distance array (?)
+n_dog = zeros(N_dogs,2);    % allocate normal dog vector array
+
+
+
+
 
 
 

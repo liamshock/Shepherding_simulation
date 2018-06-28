@@ -38,19 +38,19 @@ epsilon = 1;                              % material parameter
 mass = 0.1;                               % 'social mass' of the sheep
 c = 0.0*ones(N_dogs,1);                   % predator-prey repulsion
 maxv = 1;                                 % max velocity of sheep
-time = 10;                                 % total time
+time = 5;                                 % total time
 dt = 0.0001;                              % time step
 method = 'Kinematic';                     % integration method
-borders = [0 5 0 5];                    % set [x0 x1 y0 y1] to turn borders on (particles bounce), 0 is off
+borders = [0 5 0 5];                      % set [x0 x1 y0 y1] to turn borders on (particles bounce), 0 is off
 ApplyBC = false;                          % should we use the boundary conditions
-N = 30;                                   % num of particles 
+N = 20;                                   % num of particles 
 fps = 10;                                 % FPS for movie
 x_T = 10;                                 % desired x-comp of flock COM
 y_T = 10;                                 % desired x-comp of flock COM
 spd_dog = 2*ones(N_dogs,1);               % speed of the dog
 beta = pi/3;                              % dog driving angle
 dog_dist = sqrt(N).*ones(N_dogs,1);       % the distance the dog keeps from the herd
-tau = 9.9/dt;                               % the number of timesteps we wait for equilibrium of flock (should be less than time)
+tau = 4/dt;                               % num of timesteps we wait for flock relaxation
 
 
 
@@ -59,9 +59,10 @@ tau = 9.9/dt;                               % the number of timesteps we wait fo
 %%%%%%%%%%%%%%%%%% Main body %%%%%%%%%%%%%%%%%%%%%%%%%
 
 % run the main simulation
-[x, y, u, v, f_x, f_y, V_j, V, T, x_dog, y_dog, u_dog, v_dog, x_bar_init, y_bar_init, noise_arr] = run_simulation(maxv, tau, x_T, y_T, spd_dog, beta, seed, ...
-                                                                                                       epsilon, c, time, dt, N, mass, ...
-                                                                                                       method, borders, ApplyBC, dog_dist, N_dogs);
+[x, y, u, v, f_x, f_y, V_j, V, T, x_dog, y_dog, u_dog, v_dog, x_bar_init, y_bar_init, noise_arr] = run_simulation(maxv, tau, x_T, y_T, spd_dog, beta, ...
+                                                                                                                  seed, epsilon, c, time, dt, N, mass, ...
+                                                                                                                  method, borders, ApplyBC, dog_dist, ...
+                                                                                                                  N_dogs);
                                           
 % extract the data arrays
 [A, B, orientation, eccentricity, X_bar, Y_bar, area] = extract_data(x, y, time, dt, N);
