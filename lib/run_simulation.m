@@ -65,8 +65,8 @@ u_dog = x_dog;
 
 
 % Initial random positions for dogs (first frame)
-x_dog(:, 1:tau+1) = [0;5;5]*ones(1,tau+1);
-y_dog(:, 1:tau+1) = [0;5;0]*ones(1,tau+1);
+x_dog(:, 1:tau+1) = [0;0;1]*ones(1,tau+1);
+y_dog(:, 1:tau+1) = [0;1;0]*ones(1,tau+1);
 v_dog(:, 1:tau+1) = zeros(N_dogs,1)*ones(1,tau+1);
 u_dog(:, 1:tau+1) = zeros(N_dogs,1)*ones(1,tau+1);
 
@@ -204,24 +204,6 @@ for t=1:timesteps
             % Forward Kinematic y
             u(i,t+1) = sum(f_y) + vy_noise;
             y(i,t+1) = y(i,t) + sign(u(i,t+1))*min(abs(u(i,t+1)), maxv)*dt;
-            
-        elseif(strcmp('Euler',method) || t==1)
-            % Forward Euler x
-            x(i,t+1) = x(i,t) + v(i,t)*dt;
-            v(i,t+1) = v(i,t) + (sum(f_x)-v(i,t))/m(i)*dt;
-            
-            % Forward Euler y
-            y(i,t+1) = y(i,t) + u(i,t)*dt;
-            u(i,t+1) = u(i,t) + (sum(f_y)-v(i,t))/m(i)*dt;
-            
-        elseif(strcmp('Verlet',method))
-            %Verlet algorithm x
-            x(i,t+1) = -x(i,t-1) + 2*x(i,t) + (sum(f_x)-v(i,t))/m(i)*dt^2;
-            v(i,t) = (x(i,t-1) - x(i,t+1))/(2*dt);
-           
-            %Verlet algorithm y
-            y(i,t+1) = -y(i,t-1) + 2*y(i,t) + (sum(f_y)-v(i,t))/m(i)*dt^2;
-            u(i,t) = (y(i,t-1) - y(i,t+1))/(2*dt);
             
         else
             disp('No valid integration method given!');
