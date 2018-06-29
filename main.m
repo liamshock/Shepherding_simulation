@@ -38,7 +38,7 @@ epsilon = 1;                              % material parameter
 mass = 0.1;                               % 'social mass' of the sheep
 c = 1*ones(N_dogs,1);                   % predator-prey repulsion
 maxv = 1;                                 % max velocity of sheep
-time = 5;                                 % total time
+time = 20;                                 % total time
 dt = 0.0001;                              % time step
 method = 'Kinematic';                     % integration method
 borders = [0 5 0 5];                      % set [x0 x1 y0 y1] to turn borders on (particles bounce), 0 is off
@@ -51,7 +51,7 @@ spd_dog = 2*ones(N_dogs,1);               % speed of the dog
 beta = pi/3;                              % dog driving angle
 dog_dist = sqrt(N).*ones(N_dogs,1);       % the distance the dog keeps from the herd
 tau = 0.01/dt;                               % num of timesteps we wait for flock relaxation
-
+DBeta = pi/6;
 
 
 
@@ -62,7 +62,7 @@ tau = 0.01/dt;                               % num of timesteps we wait for floc
 [x, y, u, v, f_x, f_y, V_j, V, T, x_dog, y_dog, u_dog, v_dog, x_bar_init, y_bar_init, noise_arr] = run_simulation(maxv, tau, x_T, y_T, spd_dog, beta, ...
                                                                                                                   seed, epsilon, c, time, dt, N, mass, ...
                                                                                                                   method, borders, ApplyBC, dog_dist, ...
-                                                                                                                  N_dogs);
+                                                                                                                  N_dogs,DBeta);
                                           
 % extract the data arrays
 [A, B, orientation, eccentricity, X_bar, Y_bar, area] = extract_data(x, y, time, dt, N);
@@ -71,7 +71,7 @@ tau = 0.01/dt;                               % num of timesteps we wait for floc
 plot_functions(outpath, time, dt, N, orientation, eccentricity, area, X_bar, Y_bar, T, V);
 
 % write the movie
-make_movie(outpath, dt, time, fps, N, ApplyBC, borders, x, y, u, v, x_dog, y_dog, u_dog, v_dog, x_bar_init, y_bar_init, x_T, y_T, N_dogs);
+make_movie(outpath, dt, time, fps, N, ApplyBC, borders, x, y, u, v, x_dog, y_dog, u_dog, v_dog, x_bar_init, y_bar_init, x_T, y_T, N_dogs,DBeta,Wx,Wy, d1, d2, d3, d4);
 
 % save the workspace 
 workspacePath = fullfile(outpath, 'Variables');
